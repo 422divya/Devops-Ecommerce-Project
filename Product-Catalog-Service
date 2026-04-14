@@ -91,3 +91,135 @@ INFO[0000] Product Catalog gRPC server started on port: 8080
 
 
 ==> Created the Docker file for it.
+
+==> Got below error:
+~~~~~~~~~~~~~~
+ubuntu@ip-172-31-128-27:~/ultimate-devops-project-demo/src/product-catalog$ sudo docker build -t divya422/product-catalog:v1 .
+[+] Building 87.4s (13/13) FINISHED                                                                                                        docker:default
+ => [internal] load build definition from Dockerfile                                                                                                 0.0s
+ => => transferring dockerfile: 309B                                                                                                                 0.0s
+ => WARN: FromAsCasing: 'As' and 'FROM' keywords' casing do not match (line 1)                                                                       0.0s
+ => WARN: FromAsCasing: 'As' and 'FROM' keywords' casing do not match (line 11)                                                                      0.0s
+ => [internal] load metadata for docker.io/library/alpine:latest                                                                                     0.1s
+ => [internal] load metadata for docker.io/library/golang:1.22-alpine                                                                                0.1s
+ => [internal] load .dockerignore                                                                                                                    0.0s
+ => => transferring context: 2B                                                                                                                      0.0s
+ => [build 1/5] FROM docker.io/library/golang:1.22-alpine@sha256:1699c10032ca2582ec89a24a1312d986a3f094aed3d5c1147b19880afe40e052                    6.2s
+ => => resolve docker.io/library/golang:1.22-alpine@sha256:1699c10032ca2582ec89a24a1312d986a3f094aed3d5c1147b19880afe40e052                          0.1s
+ => => sha256:5f837c998576dcb54bc285997f33fcc2166dff6aa48fe3a374da92474efd5fe8 126B / 126B                                                           0.1s
+ => => sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1 32B / 32B                                                             0.1s
+ => => sha256:4d75fd4b73869ed224045c010cdec78756eefb6752a5a8e4804294009eac11e9 294.90kB / 294.90kB                                                   0.1s
+ => => sha256:afa154b433c7f72db064d19e1bcfa84ee196ad29120328f6bdb2c5fbd7b8eeac 69.36MB / 69.36MB                                                     1.9s
+ => => sha256:1f3e46996e2966e4faa5846e56e76e3748b7315e2ded61476c24403d592134f0 3.64MB / 3.64MB                                                       0.3s
+ => => extracting sha256:1f3e46996e2966e4faa5846e56e76e3748b7315e2ded61476c24403d592134f0                                                            0.4s
+ => => extracting sha256:4d75fd4b73869ed224045c010cdec78756eefb6752a5a8e4804294009eac11e9                                                            0.2s
+ => => extracting sha256:afa154b433c7f72db064d19e1bcfa84ee196ad29120328f6bdb2c5fbd7b8eeac                                                            3.9s
+ => => extracting sha256:5f837c998576dcb54bc285997f33fcc2166dff6aa48fe3a374da92474efd5fe8                                                            0.0s
+ => => extracting sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1                                                            0.0s
+ => [release 1/3] FROM docker.io/library/alpine:latest@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f2198c3f659                       0.8s
+ => => resolve docker.io/library/alpine:latest@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f2198c3f659                               0.1s
+ => => sha256:589002ba0eaed121a1dbf42f6648f29e5be55d5c8a6ee0f8eaa0285cc21ac153 3.86MB / 3.86MB                                                       0.2s
+ => => extracting sha256:589002ba0eaed121a1dbf42f6648f29e5be55d5c8a6ee0f8eaa0285cc21ac153                                                            0.5s
+ => [internal] load build context                                                                                                                    2.0s
+ => => transferring context: 98.40MB                                                                                                                 1.9s
+ => [release 2/3] WORKDIR /usr/src/app                                                                                                               0.3s
+ => [build 2/5] WORKDIR /usr/src/app                                                                                                                 0.2s
+ => [build 3/5] COPY . .                                                                                                                             0.7s
+ => [build 4/5] RUN go mod download                                                                                                                  5.2s
+ => [build 5/5] RUN go build -o product-catalog .                                                                                                   70.8s
+ => ERROR [release 3/3] COPY --from=build product-catalog .                                                                                          0.0s
+------
+ > [release 3/3] COPY --from=build product-catalog .:
+------
+
+ 2 warnings found (use docker --debug to expand):
+ - FromAsCasing: 'As' and 'FROM' keywords' casing do not match (line 1)
+ - FromAsCasing: 'As' and 'FROM' keywords' casing do not match (line 11)
+Dockerfile:15
+--------------------
+  13 |     WORKDIR /usr/src/app
+  14 |     
+  15 | >>> COPY --from=build product-catalog .
+  16 |     
+  17 |     ENV PRODUCT_CATALOG_PORT=8085
+--------------------
+ERROR: failed to build: failed to solve: failed to compute cache key: failed to calculate checksum of ref 98buir0lfogbcspknmo6v158e::l7hds0q7fxlcqg08tijlnhq7b: "/product-catalog": not found
+~~~~~~~~~~~~~~
+
+
+==> Correct the As to AS in Docker file still got same error
+
+==> Corrected below line which fixed the issue
+
+COPY --from=build /usr/src/app/product-catalog 
+
+~~~~~~~~~~~~~~~~~~~
+ubuntu@ip-172-31-128-27:~/ultimate-devops-project-demo/src/product-catalog$ sudo docker build -t divya422/product-catalog:v1 .
+[+] Building 77.2s (14/14) FINISHED                                                                                                        docker:default
+ => [internal] load build definition from Dockerfile                                                                                                 0.0s
+ => => transferring dockerfile: 322B                                                                                                                 0.0s
+ => [internal] load metadata for docker.io/library/alpine:latest                                                                                     0.8s
+ => [internal] load metadata for docker.io/library/golang:1.22-alpine                                                                                0.8s
+ => [internal] load .dockerignore                                                                                                                    0.0s
+ => => transferring context: 2B                                                                                                                      0.0s
+ => [build 1/5] FROM docker.io/library/golang:1.22-alpine@sha256:1699c10032ca2582ec89a24a1312d986a3f094aed3d5c1147b19880afe40e052                    0.1s
+ => => resolve docker.io/library/golang:1.22-alpine@sha256:1699c10032ca2582ec89a24a1312d986a3f094aed3d5c1147b19880afe40e052                          0.1s
+ => [release 1/3] FROM docker.io/library/alpine:latest@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f2198c3f659                       0.1s
+ => => resolve docker.io/library/alpine:latest@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f2198c3f659                               0.1s
+ => [internal] load build context                                                                                                                    0.1s
+ => => transferring context: 822B                                                                                                                    0.0s
+ => CACHED [release 2/3] WORKDIR /usr/src/app                                                                                                        0.0s
+ => CACHED [build 2/5] WORKDIR /usr/src/app                                                                                                          0.0s
+ => [build 3/5] COPY . .                                                                                                                             0.8s
+ => [build 4/5] RUN go mod download                                                                                                                  4.3s
+ => [build 5/5] RUN go build -o product-catalog .                                                                                                   68.3s
+ => [release 3/3] COPY --from=build /usr/src/app/product-catalog .                                                                                   0.2s
+ => exporting to image                                                                                                                               1.9s
+ => => exporting layers                                                                                                                              1.5s
+ => => exporting manifest sha256:ed7a1b9aa10f7f51c63782ff87b538b9b068ba0101c51daa2e57f207f6b1b7ed                                                    0.0s
+ => => exporting config sha256:05593c617a33efd3d3f232984166fe91ed493d164f4679bc7b57dd06d812c2ce                                                      0.0s
+ => => exporting attestation manifest sha256:f0e0933b18d8448e5fe9bfb1f3db99b7fa683ed5eec3ec4af1c111740edb834c                                        0.0s
+ => => exporting manifest list sha256:c7f0990dce02138459df680fa98fe52bfa63181cbfcd859813c44d4c70dea462                                               0.0s
+ => => naming to docker.io/divya422/product-catalog:v1                                                                                               0.0s
+ => => unpacking to docker.io/divya422/product-catalog:v1                                                                                            0.3s
+~~~~~~~~~~~~~~~~~~~
+
+
+==> While running the docker container got below error. 
+
+~~~~~~~~~~
+ubuntu@ip-172-31-128-27:~/ultimate-devops-project-demo/src/product-catalog$ sudo docker run divya422/product-catalog:v1
+time="2026-04-14T14:41:44Z" level=fatal msg="Reading Product Files: open ./products: no such file or directory"
+~~~~~~~~~~
+
+==> After adding products in second stage the container worked properly.
+
+
+ubuntu@ip-172-31-128-27:~/ultimate-devops-project-demo/src/product-catalog$ cat Dockerfile 
+FROM golang:1.22-alpine AS build
+
+WORKDIR /usr/src/app
+
+COPY . . 
+
+RUN go mod download
+
+RUN go build -o product-catalog .
+
+FROM alpine AS release
+
+WORKDIR /usr/src/app
+
+COPY products ./products
+
+COPY --from=build /usr/src/app/product-catalog .
+
+ENV PRODUCT_CATALOG_PORT=8085
+
+ENTRYPOINT ["./product-catalog"]
+
+ubuntu@ip-172-31-128-27:~/ultimate-devops-project-demo/src/product-catalog$ sudo docker run divya422/product-catalog:v1
+time="2026-04-14T14:54:32Z" level=info msg="Loaded 10 products"
+time="2026-04-14T14:54:32Z" level=info msg="Product Catalog gRPC server started on port: 8085"
+
+
