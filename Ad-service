@@ -1,0 +1,293 @@
+==> Dockerfile created for the Ad service...it's failing with below error while building image
+
+
+==> Dockerfile:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ubuntu@ip-172-31-56-2:~/ultimate-devops-project-demo/src/ad$ cat Dockerfile 
+FROM eclipse-temurin:21-jdk AS builder
+
+WORKDIR /usr/src/app/
+
+COPY . . 
+
+RUN chmod +x ./gradlew
+
+RUN ./gradlew installDist -PprotoSourceDir=./proto
+
+#############################################################
+
+FROM eclipse-temurin:21-jre
+
+WORKDIR /usr/src/app/
+
+COPY --from=builder /usr/src/app/ .
+
+ENV AD_PORT 9099
+
+ENTRYPOINT ["./build/install/opentelemetry-demo-ad/bin/Ad"]
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+ => ERROR [builder 5/5] RUN ./gradlew installDist -PprotoSourceDir=./proto                                                                          41.6s
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------                                                                                                                                                    
+ > [builder 5/5] RUN ./gradlew installDist -PprotoSourceDir=./proto:                                                                                      
+0.925 Downloading https://services.gradle.org/distributions/gradle-8.9-bin.zip                                                                            
+2.322 ............10%.............20%.............30%.............40%.............50%.............60%.............70%.............80%.............90%.............100%                                                                                                                                              
+5.738                                                                                                                                                     
+5.738 Welcome to Gradle 8.9!
+5.738 
+5.738 Here are the highlights of this release:
+5.738  - Enhanced Error and Warning Messages
+5.738  - IDE Integration Improvements
+5.738  - Daemon JVM Information
+5.738 
+5.738 For more details see https://docs.gradle.org/8.9/release-notes.html
+5.743 
+6.036 Starting a Gradle Daemon (subsequent builds will be faster)
+28.38 > Task :copyProtos NO-SOURCE
+35.55 > Task :extractIncludeProto
+35.55 > Task :extractProto
+35.55 > Task :generateProto NO-SOURCE
+39.64 
+39.64 > Task :compileJava
+39.64 /usr/src/app/src/main/java/oteldemo/AdService.java:37: error: package oteldemo.Demo does not exist
+39.64 import oteldemo.Demo.Ad;
+39.64                     ^
+39.74 /usr/src/app/src/main/java/oteldemo/AdService.java:38: error: package oteldemo.Demo does not exist
+39.74 import oteldemo.Demo.AdRequest;
+39.74                     ^
+39.74 /usr/src/app/src/main/java/oteldemo/AdService.java:39: error: package oteldemo.Demo does not exist
+39.74 import oteldemo.Demo.AdResponse;
+39.74                     ^
+39.74 /usr/src/app/src/main/java/oteldemo/AdService.java:228: error: cannot find symbol
+39.74   private static final ImmutableListMultimap<String, Ad> adsMap = createAdsMap();
+39.74                                                      ^
+39.74   symbol:   class Ad
+39.74   location: class AdService
+39.74 /usr/src/app/src/main/java/oteldemo/AdService.java:231: error: cannot find symbol
+39.74   private Collection<Ad> getAdsByCategory(@SpanAttribute("app.ads.category") String category) {
+39.74                      ^
+39.74   symbol:   class Ad
+39.74   location: class AdService
+39.74 /usr/src/app/src/main/java/oteldemo/AdService.java:239: error: cannot find symbol
+39.74   private List<Ad> getRandomAds() {
+39.74                ^
+39.74   symbol:   class Ad
+39.74   location: class AdService
+39.74 /usr/src/app/src/main/java/oteldemo/AdService.java:273: error: cannot find symbol
+39.74   private static ImmutableListMultimap<String, Ad> createAdsMap() {
+39.74                                                ^
+39.74   symbol:   class Ad
+39.74   location: class AdService
+39.84 /usr/src/app/src/main/java/oteldemo/AdService.java:133: error: package oteldemo.AdServiceGrpc does not exist
+39.84   private static class AdServiceImpl extends oteldemo.AdServiceGrpc.AdServiceImplBase {
+39.84                                                                    ^
+39.84 /usr/src/app/src/main/java/oteldemo/AdService.java:150: error: cannot find symbol
+39.84     public void getAds(AdRequest req, StreamObserver<AdResponse> responseObserver) {
+39.84                        ^
+39.84   symbol:   class AdRequest
+39.84   location: class AdServiceImpl
+39.84 /usr/src/app/src/main/java/oteldemo/AdService.java:150: error: cannot find symbol
+39.84     public void getAds(AdRequest req, StreamObserver<AdResponse> responseObserver) {
+39.84                                                      ^
+39.84   symbol:   class AdResponse
+39.84   location: class AdServiceImpl
+40.04 /usr/src/app/src/main/java/oteldemo/AdService.java:98: error: no suitable method found for addService(AdServiceImpl)
+40.04             .addService(new AdServiceImpl())
+40.04             ^
+40.04     method ServerBuilder.addService(ServerServiceDefinition) is not applicable
+40.04       (argument mismatch; AdServiceImpl cannot be converted to ServerServiceDefinition)
+40.04     method ServerBuilder.addService(BindableService) is not applicable
+40.04       (argument mismatch; AdServiceImpl cannot be converted to BindableService)
+40.04   where CAP#1 is a fresh type-variable:
+40.04     CAP#1 extends ServerBuilder<CAP#1> from capture of ?
+40.24 /usr/src/app/src/main/java/oteldemo/AdService.java:149: error: method does not override or implement a method from a supertype
+40.24     @Override
+40.24     ^
+40.24 /usr/src/app/src/main/java/oteldemo/AdService.java:156: error: cannot find symbol
+40.24         List<Ad> allAds = new ArrayList<>();
+40.24              ^
+40.24   symbol:   class Ad
+40.24   location: class AdServiceImpl
+40.24 /usr/src/app/src/main/java/oteldemo/AdService.java:179: error: cannot find symbol
+40.24             Collection<Ad> ads = service.getAdsByCategory(req.getContextKeys(i));
+40.24                        ^
+40.24   symbol:   class Ad
+40.24   location: class AdServiceImpl
+40.34 /usr/src/app/src/main/java/oteldemo/AdService.java:215: error: cannot find symbol
+40.34         AdResponse reply = AdResponse.newBuilder().addAllAds(allAds).build();
+40.34         ^
+40.34   symbol:   class AdResponse
+40.34   location: class AdServiceImpl
+40.34 /usr/src/app/src/main/java/oteldemo/AdService.java:215: error: cannot find symbol
+40.34         AdResponse reply = AdResponse.newBuilder().addAllAds(allAds).build();
+40.34                            ^
+40.34   symbol:   variable AdResponse
+40.34   location: class AdServiceImpl
+40.34 /usr/src/app/src/main/java/oteldemo/AdService.java:232: error: cannot find symbol
+40.34     Collection<Ad> ads = adsMap.get(category);
+40.34                ^
+40.34   symbol:   class Ad
+40.34   location: class AdService
+40.34 /usr/src/app/src/main/java/oteldemo/AdService.java:241: error: cannot find symbol
+40.34     List<Ad> ads = new ArrayList<>(MAX_ADS_TO_SERVE);
+40.34          ^
+40.34   symbol:   class Ad
+40.34   location: class AdService
+40.34 /usr/src/app/src/main/java/oteldemo/AdService.java:249: error: cannot find symbol
+40.34       Collection<Ad> allAds = adsMap.values();
+40.34                  ^
+40.34   symbol:   class Ad
+40.34   location: class AdService
+40.44 /usr/src/app/src/main/java/oteldemo/AdService.java:274: error: cannot find symbol
+40.44     Ad binoculars =
+40.44     ^
+40.44   symbol:   class Ad
+40.44   location: class AdService
+40.44 /usr/src/app/src/main/java/oteldemo/AdService.java:275: error: cannot find symbol
+40.44         Ad.newBuilder()
+40.44         ^
+40.44   symbol:   variable Ad
+40.44   location: class AdService
+40.44 /usr/src/app/src/main/java/oteldemo/AdService.java:279: error: cannot find symbol
+40.44     Ad explorerTelescope =
+40.44     ^
+40.44   symbol:   class Ad
+40.44   location: class AdService
+40.44 /usr/src/app/src/main/java/oteldemo/AdService.java:280: error: cannot find symbol
+40.44         Ad.newBuilder()
+40.44         ^
+40.44   symbol:   variable Ad
+40.44   location: class AdService
+40.44 /usr/src/app/src/main/java/oteldemo/AdService.java:284: error: cannot find symbol
+40.44     Ad colorImager =
+40.44     ^
+40.44   symbol:   class Ad
+40.44   location: class AdService
+40.44 /usr/src/app/src/main/java/oteldemo/AdService.java:285: error: cannot find symbol
+40.44         Ad.newBuilder()
+40.44         ^
+40.44   symbol:   variable Ad
+40.44   location: class AdService
+40.44 /usr/src/app/src/main/java/oteldemo/AdService.java:289: error: cannot find symbol
+40.44     Ad opticalTube =
+40.45     ^
+40.45   symbol:   class Ad
+40.45   location: class AdService
+40.45 /usr/src/app/src/main/java/oteldemo/AdService.java:290: error: cannot find symbol
+40.45         Ad.newBuilder()
+40.45         ^
+40.45   symbol:   variable Ad
+40.45   location: class AdService
+40.45 /usr/src/app/src/main/java/oteldemo/AdService.java:294: error: cannot find symbol
+40.45     Ad travelTelescope =
+40.45     ^
+40.45   symbol:   class Ad
+40.45   location: class AdService
+40.45 /usr/src/app/src/main/java/oteldemo/AdService.java:295: error: cannot find symbol
+40.45         Ad.newBuilder()
+40.45         ^
+40.45   symbol:   variable Ad
+40.45   location: class AdService
+40.45 /usr/src/app/src/main/java/oteldemo/AdService.java:300: error: cannot find symbol
+40.45     Ad solarFilter =
+40.45     ^
+40.45   symbol:   class Ad
+40.45   location: class AdService
+40.45 /usr/src/app/src/main/java/oteldemo/AdService.java:301: error: cannot find symbol
+40.45         Ad.newBuilder()
+40.45         ^
+40.45   symbol:   variable Ad
+40.45   location: class AdService
+40.45 /usr/src/app/src/main/java/oteldemo/AdService.java:305: error: cannot find symbol
+40.45     Ad cleaningKit =
+40.45     ^
+40.45   symbol:   class Ad
+40.45   location: class AdService
+40.45 /usr/src/app/src/main/java/oteldemo/AdService.java:306: error: cannot find symbol
+40.45         Ad.newBuilder()
+40.45         ^
+40.45   symbol:   variable Ad
+40.45   location: class AdService
+40.45 /usr/src/app/src/main/java/oteldemo/AdService.java:310: error: cannot find symbol
+40.45     return ImmutableListMultimap.<String, Ad>builder()
+40.45                                           ^
+40.45   symbol:   class Ad
+40.45   location: class AdService
+40.54 Note: /usr/src/app/src/main/java/oteldemo/problempattern/MemoryUtils.java uses or overrides a deprecated API.
+40.54 Note: Recompile with -Xlint:deprecation for details.
+40.54 34 errors
+40.54 > Task :compileJava FAILED
+40.54 
+40.64 
+40.64 FAILURE: Build failed with an exception.
+40.64 
+40.64 * What went wrong:
+40.64 Execution failed for task ':compileJava'.
+40.64 > Compilation failed; see the compiler error output for details.
+40.64 
+40.64 * Try:
+40.64 > Run with --info option to get more log output.
+40.65 > Run with 
+40.65 Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+40.65 
+40.65 You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+40.65 
+40.65 For more on this, please refer to https://docs.gradle.org/8.9/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.--scan to get full insights.
+40.65 
+40.65 
+40.65 BUILD FAILED in 39s
+40.66 3 actionable tasks: 3 executed
+------
+
+ 1 warning found (use docker --debug to expand):
+ - LegacyKeyValueFormat: "ENV key=value" should be used instead of legacy "ENV key value" format (line 19)
+Dockerfile:9
+--------------------
+   7 |     RUN chmod +x ./gradlew
+   8 |     
+   9 | >>> RUN ./gradlew installDist -PprotoSourceDir=./proto
+  10 |     
+  11 |     #############################################################
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c ./gradlew installDist -PprotoSourceDir=./proto" did not complete successfully: exit code: 1
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+==> Below Dockerfile worked
+
+~~~~~~~~~~~~~~~~~~~~~~~~
+ubuntu@ip-172-31-56-2:~/ultimate-devops-project-demo/src/ad$ cat Dockerfile 
+FROM eclipse-temurin:21-jdk AS builder
+
+WORKDIR /usr/src/app/
+
+COPY . . 
+
+
+COPY gradlew* settings.gradle* build.gradle .
+COPY ./gradle ./gradle
+
+RUN chmod +x ./gradlew
+RUN ./gradlew
+RUN ./gradlew downloadRepos
+
+COPY . .
+COPY ./pb ./proto
+RUN chmod +x ./gradlew
+RUN ./gradlew installDist -PprotoSourceDir=./proto
+#############################################################
+
+FROM eclipse-temurin:21-jre
+
+WORKDIR /usr/src/app/
+
+COPY --from=builder /usr/src/app/ .
+
+ENV AD_PORT=9099
+
+ENTRYPOINT ["./build/install/opentelemetry-demo-ad/bin/Ad"]
+~~~~~~~~~~~~~~~~~~~~~~~~~
