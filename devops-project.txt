@@ -1,0 +1,1938 @@
+
+
+==> initialzed the terraform. Its downlaoded the module and the provider
+
+
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra> terraform init             
+Initializing modules...
+Initializing provider plugins found in the configuration...
+- Reusing previous version of hashicorp/aws from the dependency lock file
+- Using previously-installed hashicorp/aws v5.100.0
+
+Initializing the backend...
+
+
+
+Terraform has been successfully initialized!
+
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.
+
+
+==> 
+
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra> 
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra> terraform init
+Initializing modules...
+Initializing provider plugins found in the configuration...
+- Reusing previous version of hashicorp/aws from the dependency lock file
+- Using previously-installed hashicorp/aws v5.100.0
+
+Initializing the backend...
+
+╷
+│ Warning: Deprecated Parameter
+│ 
+│   on backend.tf line 6, in terraform:
+│    6:     dynamodb_table = "terraform-state-lock"
+│ 
+│ The parameter "dynamodb_table" is deprecated. Use parameter "use_lockfile" instead.
+╵
+╷
+│ Error: No valid credential sources found
+│ 
+│ Please see https://developer.hashicorp.com/terraform/language/backend/s3
+│ for more information about providing credentials.
+│ 
+│ Error: failed to refresh cached credentials, no EC2 IMDS role found, operation error ec2imds: GetMetadata, request
+│ canceled, context deadline exceeded
+
+
+
+==> ❌ AWS credentials in tfvars are NOT used for backend authentication
+
+Terraform backend (S3 + DynamoDB) needs AWS credentials from:
+
+✔ Environment variables
+✔ AWS CLI profile
+✔ IAM role (EC2 only)
+
+NOT from:
+
+terraform.tfvars
+.tf variables
+input variables
+
+
+==> set up aws cred by using aws configure/.
+
+==> Then created the s3 bbucket and dynamodb manually first.
+
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra> aws s3api create-bucket --bucket terraform-state-file-divya --region us-east-1 
+{                                                                                                   
+    "Location": "/terraform-state-file-divya",
+    "BucketArn": "arn:aws:s3:::terraform-state-file-divya"
+}
+
+
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra> aws s3api put-bucket-versioning `
+>>   --bucket terraform-state-file-divya `
+>>   --versioning-configuration Status=Enabled
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra> 
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra> 
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra> aws s3api put-public-access-block `
+>>   --bucket terraform-state-file-divya `
+>>   --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
+
+
+==> Successfully initialzed 
+
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra> terraform init
+Initializing modules...
+Initializing provider plugins found in the configuration...
+- Reusing previous version of hashicorp/aws from the dependency lock file
+- Using previously-installed hashicorp/aws v5.100.0
+
+Initializing the backend...
+
+Successfully configured the backend "s3"! Terraform will automatically
+use this backend unless the backend configuration changes.
+
+
+
+╷
+│ Warning: Deprecated Parameter
+│ 
+│   on backend.tf line 6, in terraform:
+│    6:     dynamodb_table = "terraform-state-lock"
+│ 
+│ The parameter "dynamodb_table" is deprecated. Use parameter "use_lockfile" instead.
+╵
+Terraform has been successfully initialized!
+
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.
+
+
+==> The warning message above is now we can use the DynamoDB based locking.  It now prefers S3 native locking using a lock file
+
+use_lockfile = true
+
+Above uses Amazon S3 built-in locking mechanism. No separate DynamoDB table needed.
+
+
+Before:
+S3 → stores state
+DynamoDB → handles locking
+Now:
+S3 → stores state + handles locking
+
+
+
+╵
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra> terraform init -reconfigure
+Initializing modules...
+Initializing provider plugins found in the configuration...
+- Reusing previous version of hashicorp/aws from the dependency lock file
+- Using previously-installed hashicorp/aws v5.100.0
+
+Initializing the backend...
+
+Successfully configured the backend "s3"! Terraform will automatically
+use this backend unless the backend configuration changes.
+
+
+
+Terraform has been successfully initialized!
+
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra> 
+
+
+
+
+===> Terraform Plan 
+
+
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra> terraform plan
+module.vpc.data.aws_availability_zones.available: Reading...
+module.vpc.data.aws_availability_zones.available: Read complete after 2s [id=us-east-1]
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are
+indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # module.vpc.aws_eip.nat[0] will be created
+  + resource "aws_eip" "nat" {
+      + allocation_id        = (known after apply)
+      + arn                  = (known after apply)
+      + association_id       = (known after apply)
+      + carrier_ip           = (known after apply)
+      + customer_owned_ip    = (known after apply)
+      + domain               = "vpc"
+      + id                   = (known after apply)
+      + instance             = (known after apply)
+      + ipam_pool_id         = (known after apply)
+      + network_border_group = (known after apply)
+      + network_interface    = (known after apply)
+      + private_dns          = (known after apply)
+      + private_ip           = (known after apply)
+      + ptr_record           = (known after apply)
+      + public_dns           = (known after apply)
+      + public_ip            = (known after apply)
+      + public_ipv4_pool     = (known after apply)
+      + tags                 = {
+          + "Name" = "terraform-aws-infra-nat-eip-1"
+        }
+      + tags_all             = {
+          + "Name" = "terraform-aws-infra-nat-eip-1"
+        }
+      + vpc                  = (known after apply)
+    }
+
+  # module.vpc.aws_eip.nat[1] will be created
+  + resource "aws_eip" "nat" {
+      + allocation_id        = (known after apply)
+      + arn                  = (known after apply)
+      + association_id       = (known after apply)
+      + carrier_ip           = (known after apply)
+      + customer_owned_ip    = (known after apply)
+      + domain               = "vpc"
+      + id                   = (known after apply)
+      + instance             = (known after apply)
+      + ipam_pool_id         = (known after apply)
+      + network_border_group = (known after apply)
+      + network_interface    = (known after apply)
+      + private_dns          = (known after apply)
+      + private_ip           = (known after apply)
+      + ptr_record           = (known after apply)
+      + public_dns           = (known after apply)
+      + public_ip            = (known after apply)
+      + public_ipv4_pool     = (known after apply)
+      + tags                 = {
+          + "Name" = "terraform-aws-infra-nat-eip-2"
+        }
+      + tags_all             = {
+          + "Name" = "terraform-aws-infra-nat-eip-2"
+        }
+      + vpc                  = (known after apply)
+    }
+
+  # module.vpc.aws_eip.nat[2] will be created
+  + resource "aws_eip" "nat" {
+      + allocation_id        = (known after apply)
+      + arn                  = (known after apply)
+      + association_id       = (known after apply)
+      + carrier_ip           = (known after apply)
+      + customer_owned_ip    = (known after apply)
+      + domain               = "vpc"
+      + id                   = (known after apply)
+      + instance             = (known after apply)
+      + ipam_pool_id         = (known after apply)
+      + network_border_group = (known after apply)
+      + network_interface    = (known after apply)
+      + private_dns          = (known after apply)
+      + private_ip           = (known after apply)
+      + ptr_record           = (known after apply)
+      + public_dns           = (known after apply)
+      + public_ip            = (known after apply)
+      + public_ipv4_pool     = (known after apply)
+      + tags                 = {
+          + "Name" = "terraform-aws-infra-nat-eip-3"
+        }
+      + tags_all             = {
+          + "Name" = "terraform-aws-infra-nat-eip-3"
+        }
+      + vpc                  = (known after apply)
+    }
+
+  # module.vpc.aws_internet_gateway.main will be created
+  + resource "aws_internet_gateway" "main" {
+      + arn      = (known after apply)
+      + id       = (known after apply)
+      + owner_id = (known after apply)
+      + tags     = {
+          + "Name" = "terraform-aws-infra-igw"
+        }
+      + tags_all = {
+          + "Name" = "terraform-aws-infra-igw"
+        }
+      + vpc_id   = (known after apply)
+    }
+
+  # module.vpc.aws_nat_gateway.main[0] will be created
+  + resource "aws_nat_gateway" "main" {
+      + allocation_id                      = (known after apply)
+      + association_id                     = (known after apply)
+      + connectivity_type                  = "public"
+      + id                                 = (known after apply)
+      + network_interface_id               = (known after apply)
+      + private_ip                         = (known after apply)
+      + public_ip                          = (known after apply)
+      + secondary_private_ip_address_count = (known after apply)
+      + secondary_private_ip_addresses     = (known after apply)
+      + subnet_id                          = (known after apply)
+      + tags                               = {
+          + "Name" = "terraform-aws-infra-nat-gw-1"
+        }
+      + tags_all                           = {
+          + "Name" = "terraform-aws-infra-nat-gw-1"
+        }
+    }
+
+  # module.vpc.aws_nat_gateway.main[1] will be created
+  + resource "aws_nat_gateway" "main" {
+      + allocation_id                      = (known after apply)
+      + association_id                     = (known after apply)
+      + connectivity_type                  = "public"
+      + id                                 = (known after apply)
+      + network_interface_id               = (known after apply)
+      + private_ip                         = (known after apply)
+      + public_ip                          = (known after apply)
+      + secondary_private_ip_address_count = (known after apply)
+      + secondary_private_ip_addresses     = (known after apply)
+      + subnet_id                          = (known after apply)
+      + tags                               = {
+          + "Name" = "terraform-aws-infra-nat-gw-2"
+        }
+      + tags_all                           = {
+          + "Name" = "terraform-aws-infra-nat-gw-2"
+        }
+    }
+
+  # module.vpc.aws_nat_gateway.main[2] will be created
+  + resource "aws_nat_gateway" "main" {
+      + allocation_id                      = (known after apply)
+      + association_id                     = (known after apply)
+      + connectivity_type                  = "public"
+      + id                                 = (known after apply)
+      + network_interface_id               = (known after apply)
+      + private_ip                         = (known after apply)
+      + public_ip                          = (known after apply)
+      + secondary_private_ip_address_count = (known after apply)
+      + secondary_private_ip_addresses     = (known after apply)
+      + subnet_id                          = (known after apply)
+      + tags                               = {
+          + "Name" = "terraform-aws-infra-nat-gw-3"
+        }
+      + tags_all                           = {
+          + "Name" = "terraform-aws-infra-nat-gw-3"
+        }
+    }
+
+  # module.vpc.aws_route_table.private[0] will be created
+  + resource "aws_route_table" "private" {
+      + arn              = (known after apply)
+      + id               = (known after apply)
+      + owner_id         = (known after apply)
+      + propagating_vgws = (known after apply)
+      + route            = [
+          + {
+              + cidr_block                 = "0.0.0.0/0"
+              + nat_gateway_id             = (known after apply)
+                # (11 unchanged attributes hidden)
+            },
+        ]
+      + tags             = {
+          + "Name" = "terraform-aws-infra-private-rt-1"
+        }
+      + tags_all         = {
+          + "Name" = "terraform-aws-infra-private-rt-1"
+        }
+      + vpc_id           = (known after apply)
+    }
+
+  # module.vpc.aws_route_table.private[1] will be created
+  + resource "aws_route_table" "private" {
+      + arn              = (known after apply)
+      + id               = (known after apply)
+      + owner_id         = (known after apply)
+      + propagating_vgws = (known after apply)
+      + route            = [
+          + {
+              + cidr_block                 = "0.0.0.0/0"
+              + nat_gateway_id             = (known after apply)
+                # (11 unchanged attributes hidden)
+            },
+        ]
+      + tags             = {
+          + "Name" = "terraform-aws-infra-private-rt-2"
+        }
+      + tags_all         = {
+          + "Name" = "terraform-aws-infra-private-rt-2"
+        }
+      + vpc_id           = (known after apply)
+    }
+
+  # module.vpc.aws_route_table.private[2] will be created
+  + resource "aws_route_table" "private" {
+      + arn              = (known after apply)
+      + id               = (known after apply)
+      + owner_id         = (known after apply)
+      + propagating_vgws = (known after apply)
+      + route            = [
+          + {
+              + cidr_block                 = "0.0.0.0/0"
+              + nat_gateway_id             = (known after apply)
+                # (11 unchanged attributes hidden)
+            },
+        ]
+      + tags             = {
+          + "Name" = "terraform-aws-infra-private-rt-3"
+        }
+      + tags_all         = {
+          + "Name" = "terraform-aws-infra-private-rt-3"
+        }
+      + vpc_id           = (known after apply)
+    }
+
+  # module.vpc.aws_route_table.public will be created
+  + resource "aws_route_table" "public" {
+      + arn              = (known after apply)
+      + id               = (known after apply)
+      + owner_id         = (known after apply)
+      + propagating_vgws = (known after apply)
+      + route            = [
+          + {
+              + cidr_block                 = "0.0.0.0/0"
+              + gateway_id                 = (known after apply)
+                # (11 unchanged attributes hidden)
+            },
+        ]
+      + tags             = {
+          + "Name" = "terraform-aws-infra-public-rt"
+        }
+      + tags_all         = {
+          + "Name" = "terraform-aws-infra-public-rt"
+        }
+      + vpc_id           = (known after apply)
+    }
+
+  # module.vpc.aws_route_table_association.private[0] will be created
+  + resource "aws_route_table_association" "private" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # module.vpc.aws_route_table_association.private[1] will be created
+  + resource "aws_route_table_association" "private" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # module.vpc.aws_route_table_association.private[2] will be created
+  + resource "aws_route_table_association" "private" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # module.vpc.aws_route_table_association.public[0] will be created
+  + resource "aws_route_table_association" "public" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # module.vpc.aws_route_table_association.public[1] will be created
+  + resource "aws_route_table_association" "public" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # module.vpc.aws_route_table_association.public[2] will be created
+  + resource "aws_route_table_association" "public" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # module.vpc.aws_subnet.private[0] will be created
+  + resource "aws_subnet" "private" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1a"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.0.10.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = false
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = {
+          + "Name" = "terraform-aws-infra-private-subnet-1"
+          + "Type" = "Private"
+        }
+      + tags_all                                       = {
+          + "Name" = "terraform-aws-infra-private-subnet-1"
+          + "Type" = "Private"
+        }
+      + vpc_id                                         = (known after apply)
+    }
+
+  # module.vpc.aws_subnet.private[1] will be created
+  + resource "aws_subnet" "private" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1b"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.0.11.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = false
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = {
+          + "Name" = "terraform-aws-infra-private-subnet-2"
+          + "Type" = "Private"
+        }
+      + tags_all                                       = {
+          + "Name" = "terraform-aws-infra-private-subnet-2"
+          + "Type" = "Private"
+        }
+      + vpc_id                                         = (known after apply)
+    }
+
+  # module.vpc.aws_subnet.private[2] will be created
+  + resource "aws_subnet" "private" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1c"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.0.12.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = false
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = {
+          + "Name" = "terraform-aws-infra-private-subnet-3"
+          + "Type" = "Private"
+        }
+      + tags_all                                       = {
+          + "Name" = "terraform-aws-infra-private-subnet-3"
+          + "Type" = "Private"
+        }
+      + vpc_id                                         = (known after apply)
+    }
+
+  # module.vpc.aws_subnet.public[0] will be created
+  + resource "aws_subnet" "public" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1a"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.0.1.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = true
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = {
+          + "Name" = "terraform-aws-infra-public-subnet-1"
+          + "Type" = "Public"
+        }
+      + tags_all                                       = {
+          + "Name" = "terraform-aws-infra-public-subnet-1"
+          + "Type" = "Public"
+        }
+      + vpc_id                                         = (known after apply)
+    }
+
+  # module.vpc.aws_subnet.public[1] will be created
+  + resource "aws_subnet" "public" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1b"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.0.2.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = true
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = {
+          + "Name" = "terraform-aws-infra-public-subnet-2"
+          + "Type" = "Public"
+        }
+      + tags_all                                       = {
+          + "Name" = "terraform-aws-infra-public-subnet-2"
+          + "Type" = "Public"
+        }
+      + vpc_id                                         = (known after apply)
+    }
+
+  # module.vpc.aws_subnet.public[2] will be created
+  + resource "aws_subnet" "public" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1c"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.0.3.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = true
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = {
+          + "Name" = "terraform-aws-infra-public-subnet-3"
+          + "Type" = "Public"
+        }
+      + tags_all                                       = {
+          + "Name" = "terraform-aws-infra-public-subnet-3"
+          + "Type" = "Public"
+        }
+      + vpc_id                                         = (known after apply)
+    }
+
+  # module.vpc.aws_vpc.main will be created
+  + resource "aws_vpc" "main" {
+      + arn                                  = (known after apply)
+      + cidr_block                           = "10.0.0.0/16"
+      + default_network_acl_id               = (known after apply)
+      + default_route_table_id               = (known after apply)
+      + default_security_group_id            = (known after apply)
+      + dhcp_options_id                      = (known after apply)
+      + enable_dns_hostnames                 = true
+      + enable_dns_support                   = true
+      + enable_network_address_usage_metrics = (known after apply)
+      + id                                   = (known after apply)
+      + instance_tenancy                     = "default"
+      + ipv6_association_id                  = (known after apply)
+      + ipv6_cidr_block                      = (known after apply)
+      + ipv6_cidr_block_network_border_group = (known after apply)
+      + main_route_table_id                  = (known after apply)
+      + owner_id                             = (known after apply)
+      + tags                                 = {
+          + "Name" = "terraform-aws-infra-vpc"
+        }
+      + tags_all                             = {
+          + "Name" = "terraform-aws-infra-vpc"
+        }
+    }
+
+Plan: 24 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + availability_zones  = [
+      + "us-east-1a",
+      + "us-east-1b",
+      + "us-east-1c",
+      + "us-east-1d",
+      + "us-east-1e",
+      + "us-east-1f",
+    ]
+  + internet_gateway_id = (known after apply)
+  + nat_gateway_ids     = [
+      + (known after apply),
+      + (known after apply),
+      + (known after apply),
+    ]
+  + private_subnet_ids  = [
+      + (known after apply),
+      + (known after apply),
+      + (known after apply),
+    ]
+  + public_subnet_ids   = [
+      + (known after apply),
+      + (known after apply),
+      + (known after apply),
+    ]
+  + vpc_cidr_block      = "10.0.0.0/16"
+  + vpc_id              = (known after apply)
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly
+these actions if you run "terraform apply" now.
+Releasing state lock. This may take a few moments...
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra> 
+
+
+==> Terraform Apply for VPC:
+
+
+
+
+Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly
+these actions if you run "terraform apply" now.
+Releasing state lock. This may take a few moments...
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra\VPC-terraform-code> terraform apply
+module.vpc.data.aws_availability_zones.available: Reading...
+module.vpc.data.aws_availability_zones.available: Read complete after 1s [id=us-east-1]
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are
+indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # module.vpc.aws_eip.nat[0] will be created
+  + resource "aws_eip" "nat" {
+      + allocation_id        = (known after apply)
+      + arn                  = (known after apply)
+      + association_id       = (known after apply)
+      + carrier_ip           = (known after apply)
+      + customer_owned_ip    = (known after apply)
+      + domain               = "vpc"
+      + id                   = (known after apply)
+      + instance             = (known after apply)
+      + ipam_pool_id         = (known after apply)
+      + network_border_group = (known after apply)
+      + network_interface    = (known after apply)
+      + private_dns          = (known after apply)
+      + private_ip           = (known after apply)
+      + ptr_record           = (known after apply)
+      + public_dns           = (known after apply)
+      + public_ip            = (known after apply)
+      + public_ipv4_pool     = (known after apply)
+      + tags                 = {
+          + "Name" = "terraform-aws-infra-nat-eip-1"
+        }
+      + tags_all             = {
+          + "Name" = "terraform-aws-infra-nat-eip-1"
+        }
+      + vpc                  = (known after apply)
+    }
+
+  # module.vpc.aws_eip.nat[1] will be created
+  + resource "aws_eip" "nat" {
+      + allocation_id        = (known after apply)
+      + arn                  = (known after apply)
+      + association_id       = (known after apply)
+      + carrier_ip           = (known after apply)
+      + customer_owned_ip    = (known after apply)
+      + domain               = "vpc"
+      + id                   = (known after apply)
+      + instance             = (known after apply)
+      + ipam_pool_id         = (known after apply)
+      + network_border_group = (known after apply)
+      + network_interface    = (known after apply)
+      + private_dns          = (known after apply)
+      + private_ip           = (known after apply)
+      + ptr_record           = (known after apply)
+      + public_dns           = (known after apply)
+      + public_ip            = (known after apply)
+      + public_ipv4_pool     = (known after apply)
+      + tags                 = {
+          + "Name" = "terraform-aws-infra-nat-eip-2"
+        }
+      + tags_all             = {
+          + "Name" = "terraform-aws-infra-nat-eip-2"
+        }
+      + vpc                  = (known after apply)
+    }
+
+  # module.vpc.aws_eip.nat[2] will be created
+  + resource "aws_eip" "nat" {
+      + allocation_id        = (known after apply)
+      + arn                  = (known after apply)
+      + association_id       = (known after apply)
+      + carrier_ip           = (known after apply)
+      + customer_owned_ip    = (known after apply)
+      + domain               = "vpc"
+      + id                   = (known after apply)
+      + instance             = (known after apply)
+      + ipam_pool_id         = (known after apply)
+      + network_border_group = (known after apply)
+      + network_interface    = (known after apply)
+      + private_dns          = (known after apply)
+      + private_ip           = (known after apply)
+      + ptr_record           = (known after apply)
+      + public_dns           = (known after apply)
+      + public_ip            = (known after apply)
+      + public_ipv4_pool     = (known after apply)
+      + tags                 = {
+          + "Name" = "terraform-aws-infra-nat-eip-3"
+        }
+      + tags_all             = {
+          + "Name" = "terraform-aws-infra-nat-eip-3"
+        }
+      + vpc                  = (known after apply)
+    }
+
+  # module.vpc.aws_internet_gateway.main will be created
+  + resource "aws_internet_gateway" "main" {
+      + arn      = (known after apply)
+      + id       = (known after apply)
+      + owner_id = (known after apply)
+      + tags     = {
+          + "Name" = "terraform-aws-infra-igw"
+        }
+      + tags_all = {
+          + "Name" = "terraform-aws-infra-igw"
+        }
+      + vpc_id   = (known after apply)
+    }
+
+  # module.vpc.aws_nat_gateway.main[0] will be created
+  + resource "aws_nat_gateway" "main" {
+      + allocation_id                      = (known after apply)
+      + association_id                     = (known after apply)
+      + connectivity_type                  = "public"
+      + id                                 = (known after apply)
+      + network_interface_id               = (known after apply)
+      + private_ip                         = (known after apply)
+      + public_ip                          = (known after apply)
+      + secondary_private_ip_address_count = (known after apply)
+      + secondary_private_ip_addresses     = (known after apply)
+      + subnet_id                          = (known after apply)
+      + tags                               = {
+          + "Name" = "terraform-aws-infra-nat-gw-1"
+        }
+      + tags_all                           = {
+          + "Name" = "terraform-aws-infra-nat-gw-1"
+        }
+    }
+
+  # module.vpc.aws_nat_gateway.main[1] will be created
+  + resource "aws_nat_gateway" "main" {
+      + allocation_id                      = (known after apply)
+      + association_id                     = (known after apply)
+      + connectivity_type                  = "public"
+      + id                                 = (known after apply)
+      + network_interface_id               = (known after apply)
+      + private_ip                         = (known after apply)
+      + public_ip                          = (known after apply)
+      + secondary_private_ip_address_count = (known after apply)
+      + secondary_private_ip_addresses     = (known after apply)
+      + subnet_id                          = (known after apply)
+      + tags                               = {
+          + "Name" = "terraform-aws-infra-nat-gw-2"
+        }
+      + tags_all                           = {
+          + "Name" = "terraform-aws-infra-nat-gw-2"
+        }
+    }
+
+  # module.vpc.aws_nat_gateway.main[2] will be created
+  + resource "aws_nat_gateway" "main" {
+      + allocation_id                      = (known after apply)
+      + association_id                     = (known after apply)
+      + connectivity_type                  = "public"
+      + id                                 = (known after apply)
+      + network_interface_id               = (known after apply)
+      + private_ip                         = (known after apply)
+      + public_ip                          = (known after apply)
+      + secondary_private_ip_address_count = (known after apply)
+      + secondary_private_ip_addresses     = (known after apply)
+      + subnet_id                          = (known after apply)
+      + tags                               = {
+          + "Name" = "terraform-aws-infra-nat-gw-3"
+        }
+      + tags_all                           = {
+          + "Name" = "terraform-aws-infra-nat-gw-3"
+        }
+    }
+
+  # module.vpc.aws_route_table.private[0] will be created
+  + resource "aws_route_table" "private" {
+      + arn              = (known after apply)
+      + id               = (known after apply)
+      + owner_id         = (known after apply)
+      + propagating_vgws = (known after apply)
+      + route            = [
+          + {
+              + cidr_block                 = "0.0.0.0/0"
+              + nat_gateway_id             = (known after apply)
+                # (11 unchanged attributes hidden)
+            },
+        ]
+      + tags             = {
+          + "Name" = "terraform-aws-infra-private-rt-1"
+        }
+      + tags_all         = {
+          + "Name" = "terraform-aws-infra-private-rt-1"
+        }
+      + vpc_id           = (known after apply)
+    }
+
+  # module.vpc.aws_route_table.private[1] will be created
+  + resource "aws_route_table" "private" {
+      + arn              = (known after apply)
+      + id               = (known after apply)
+      + owner_id         = (known after apply)
+      + propagating_vgws = (known after apply)
+      + route            = [
+          + {
+              + cidr_block                 = "0.0.0.0/0"
+              + nat_gateway_id             = (known after apply)
+                # (11 unchanged attributes hidden)
+            },
+        ]
+      + tags             = {
+          + "Name" = "terraform-aws-infra-private-rt-2"
+        }
+      + tags_all         = {
+          + "Name" = "terraform-aws-infra-private-rt-2"
+        }
+      + vpc_id           = (known after apply)
+    }
+
+  # module.vpc.aws_route_table.private[2] will be created
+  + resource "aws_route_table" "private" {
+      + arn              = (known after apply)
+      + id               = (known after apply)
+      + owner_id         = (known after apply)
+      + propagating_vgws = (known after apply)
+      + route            = [
+          + {
+              + cidr_block                 = "0.0.0.0/0"
+              + nat_gateway_id             = (known after apply)
+                # (11 unchanged attributes hidden)
+            },
+        ]
+      + tags             = {
+          + "Name" = "terraform-aws-infra-private-rt-3"
+        }
+      + tags_all         = {
+          + "Name" = "terraform-aws-infra-private-rt-3"
+        }
+      + vpc_id           = (known after apply)
+    }
+
+  # module.vpc.aws_route_table.public will be created
+  + resource "aws_route_table" "public" {
+      + arn              = (known after apply)
+      + id               = (known after apply)
+      + owner_id         = (known after apply)
+      + propagating_vgws = (known after apply)
+      + route            = [
+          + {
+              + cidr_block                 = "0.0.0.0/0"
+              + gateway_id                 = (known after apply)
+                # (11 unchanged attributes hidden)
+            },
+        ]
+      + tags             = {
+          + "Name" = "terraform-aws-infra-public-rt"
+        }
+      + tags_all         = {
+          + "Name" = "terraform-aws-infra-public-rt"
+        }
+      + vpc_id           = (known after apply)
+    }
+
+  # module.vpc.aws_route_table_association.private[0] will be created
+  + resource "aws_route_table_association" "private" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # module.vpc.aws_route_table_association.private[1] will be created
+  + resource "aws_route_table_association" "private" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # module.vpc.aws_route_table_association.private[2] will be created
+  + resource "aws_route_table_association" "private" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # module.vpc.aws_route_table_association.public[0] will be created
+  + resource "aws_route_table_association" "public" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # module.vpc.aws_route_table_association.public[1] will be created
+  + resource "aws_route_table_association" "public" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # module.vpc.aws_route_table_association.public[2] will be created
+  + resource "aws_route_table_association" "public" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # module.vpc.aws_subnet.private[0] will be created
+  + resource "aws_subnet" "private" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1a"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.0.10.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = false
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = {
+          + "Name" = "terraform-aws-infra-private-subnet-1"
+          + "Type" = "Private"
+        }
+      + tags_all                                       = {
+          + "Name" = "terraform-aws-infra-private-subnet-1"
+          + "Type" = "Private"
+        }
+      + vpc_id                                         = (known after apply)
+    }
+
+  # module.vpc.aws_subnet.private[1] will be created
+  + resource "aws_subnet" "private" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1b"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.0.11.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = false
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = {
+          + "Name" = "terraform-aws-infra-private-subnet-2"
+          + "Type" = "Private"
+        }
+      + tags_all                                       = {
+          + "Name" = "terraform-aws-infra-private-subnet-2"
+          + "Type" = "Private"
+        }
+      + vpc_id                                         = (known after apply)
+    }
+
+  # module.vpc.aws_subnet.private[2] will be created
+  + resource "aws_subnet" "private" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1c"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.0.12.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = false
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = {
+          + "Name" = "terraform-aws-infra-private-subnet-3"
+          + "Type" = "Private"
+        }
+      + tags_all                                       = {
+          + "Name" = "terraform-aws-infra-private-subnet-3"
+          + "Type" = "Private"
+        }
+      + vpc_id                                         = (known after apply)
+    }
+
+  # module.vpc.aws_subnet.public[0] will be created
+  + resource "aws_subnet" "public" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1a"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.0.1.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = true
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = {
+          + "Name" = "terraform-aws-infra-public-subnet-1"
+          + "Type" = "Public"
+        }
+      + tags_all                                       = {
+          + "Name" = "terraform-aws-infra-public-subnet-1"
+          + "Type" = "Public"
+        }
+      + vpc_id                                         = (known after apply)
+    }
+
+  # module.vpc.aws_subnet.public[1] will be created
+  + resource "aws_subnet" "public" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1b"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.0.2.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = true
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = {
+          + "Name" = "terraform-aws-infra-public-subnet-2"
+          + "Type" = "Public"
+        }
+      + tags_all                                       = {
+          + "Name" = "terraform-aws-infra-public-subnet-2"
+          + "Type" = "Public"
+        }
+      + vpc_id                                         = (known after apply)
+    }
+
+  # module.vpc.aws_subnet.public[2] will be created
+  + resource "aws_subnet" "public" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1c"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.0.3.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = true
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = {
+          + "Name" = "terraform-aws-infra-public-subnet-3"
+          + "Type" = "Public"
+        }
+      + tags_all                                       = {
+          + "Name" = "terraform-aws-infra-public-subnet-3"
+          + "Type" = "Public"
+        }
+      + vpc_id                                         = (known after apply)
+    }
+
+  # module.vpc.aws_vpc.main will be created
+  + resource "aws_vpc" "main" {
+      + arn                                  = (known after apply)
+      + cidr_block                           = "10.0.0.0/16"
+      + default_network_acl_id               = (known after apply)
+      + default_route_table_id               = (known after apply)
+      + default_security_group_id            = (known after apply)
+      + dhcp_options_id                      = (known after apply)
+      + enable_dns_hostnames                 = true
+      + enable_dns_support                   = true
+      + enable_network_address_usage_metrics = (known after apply)
+      + id                                   = (known after apply)
+      + instance_tenancy                     = "default"
+      + ipv6_association_id                  = (known after apply)
+      + ipv6_cidr_block                      = (known after apply)
+      + ipv6_cidr_block_network_border_group = (known after apply)
+      + main_route_table_id                  = (known after apply)
+      + owner_id                             = (known after apply)
+      + tags                                 = {
+          + "Name" = "terraform-aws-infra-vpc"
+        }
+      + tags_all                             = {
+          + "Name" = "terraform-aws-infra-vpc"
+        }
+    }
+
+Plan: 24 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + availability_zones  = [
+      + "us-east-1a",
+      + "us-east-1b",
+      + "us-east-1c",
+      + "us-east-1d",
+      + "us-east-1e",
+      + "us-east-1f",
+    ]
+  + internet_gateway_id = (known after apply)
+  + nat_gateway_ids     = [
+      + (known after apply),
+      + (known after apply),
+      + (known after apply),
+    ]
+  + private_subnet_ids  = [
+      + (known after apply),
+      + (known after apply),
+      + (known after apply),
+    ]
+  + public_subnet_ids   = [
+      + (known after apply),
+      + (known after apply),
+      + (known after apply),
+    ]
+  + vpc_cidr_block      = "10.0.0.0/16"
+  + vpc_id              = (known after apply)
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+module.vpc.aws_eip.nat[2]: Creating...
+module.vpc.aws_eip.nat[1]: Creating...
+module.vpc.aws_eip.nat[0]: Creating...
+module.vpc.aws_vpc.main: Creating...
+module.vpc.aws_eip.nat[2]: Creation complete after 4s [id=eipalloc-0ec66b345c5b209b3]
+module.vpc.aws_eip.nat[0]: Creation complete after 4s [id=eipalloc-0594f22fa7ce728e2]
+module.vpc.aws_eip.nat[1]: Creation complete after 5s [id=eipalloc-0c1f8cb804c8424cb]
+module.vpc.aws_vpc.main: Still creating... [00m10s elapsed]
+module.vpc.aws_vpc.main: Creation complete after 17s [id=vpc-0c79b7af5da9b6c51]
+module.vpc.aws_internet_gateway.main: Creating...
+module.vpc.aws_subnet.public[0]: Creating...
+module.vpc.aws_subnet.public[1]: Creating...
+module.vpc.aws_subnet.private[1]: Creating...
+module.vpc.aws_subnet.private[0]: Creating...
+module.vpc.aws_subnet.private[2]: Creating...
+module.vpc.aws_subnet.public[2]: Creating...
+module.vpc.aws_subnet.private[0]: Creation complete after 2s [id=subnet-0f28a43411652ee68]
+module.vpc.aws_subnet.private[2]: Creation complete after 3s [id=subnet-0189ba37739426db4]
+module.vpc.aws_internet_gateway.main: Creation complete after 3s [id=igw-022642bb414b3f0f0]
+module.vpc.aws_route_table.public: Creating...
+module.vpc.aws_subnet.private[1]: Creation complete after 6s [id=subnet-02e3cf88c2a8c128c]
+module.vpc.aws_route_table.public: Creation complete after 4s [id=rtb-0fd0b3e935c656c42]
+module.vpc.aws_subnet.public[0]: Still creating... [00m10s elapsed]
+module.vpc.aws_subnet.public[1]: Still creating... [00m10s elapsed]
+module.vpc.aws_subnet.public[2]: Still creating... [00m10s elapsed]
+module.vpc.aws_subnet.public[2]: Creation complete after 13s [id=subnet-00b29307664481450]
+module.vpc.aws_subnet.public[0]: Creation complete after 15s [id=subnet-090d37339b6a0a64f]
+module.vpc.aws_subnet.public[1]: Creation complete after 16s [id=subnet-07b924b6235a0c5ae]
+module.vpc.aws_route_table_association.public[0]: Creating...
+module.vpc.aws_route_table_association.public[2]: Creating...
+module.vpc.aws_nat_gateway.main[2]: Creating...
+module.vpc.aws_nat_gateway.main[0]: Creating...
+module.vpc.aws_route_table_association.public[1]: Creating...
+module.vpc.aws_nat_gateway.main[1]: Creating...
+module.vpc.aws_route_table_association.public[0]: Creation complete after 1s [id=rtbassoc-0b012b76a2b75db83]
+module.vpc.aws_route_table_association.public[1]: Creation complete after 1s [id=rtbassoc-0d7e6e694de798b71]
+module.vpc.aws_route_table_association.public[2]: Creation complete after 1s [id=rtbassoc-072119f6d19c6c66c]
+module.vpc.aws_nat_gateway.main[0]: Still creating... [00m10s elapsed]
+module.vpc.aws_nat_gateway.main[2]: Still creating... [00m10s elapsed]
+module.vpc.aws_nat_gateway.main[1]: Still creating... [00m10s elapsed]
+module.vpc.aws_nat_gateway.main[0]: Still creating... [00m20s elapsed]
+module.vpc.aws_nat_gateway.main[2]: Still creating... [00m20s elapsed]
+module.vpc.aws_nat_gateway.main[1]: Still creating... [00m20s elapsed]
+module.vpc.aws_nat_gateway.main[0]: Still creating... [00m30s elapsed]
+module.vpc.aws_nat_gateway.main[2]: Still creating... [00m30s elapsed]
+module.vpc.aws_nat_gateway.main[1]: Still creating... [00m30s elapsed]
+module.vpc.aws_nat_gateway.main[0]: Still creating... [00m40s elapsed]
+module.vpc.aws_nat_gateway.main[2]: Still creating... [00m40s elapsed]
+module.vpc.aws_nat_gateway.main[1]: Still creating... [00m40s elapsed]
+module.vpc.aws_nat_gateway.main[0]: Still creating... [00m50s elapsed]
+module.vpc.aws_nat_gateway.main[2]: Still creating... [00m50s elapsed]
+module.vpc.aws_nat_gateway.main[1]: Still creating... [00m50s elapsed]
+module.vpc.aws_nat_gateway.main[0]: Still creating... [01m00s elapsed]
+module.vpc.aws_nat_gateway.main[2]: Still creating... [01m00s elapsed]
+module.vpc.aws_nat_gateway.main[1]: Still creating... [01m00s elapsed]
+module.vpc.aws_nat_gateway.main[0]: Still creating... [01m10s elapsed]
+module.vpc.aws_nat_gateway.main[2]: Still creating... [01m10s elapsed]
+module.vpc.aws_nat_gateway.main[1]: Still creating... [01m10s elapsed]
+module.vpc.aws_nat_gateway.main[0]: Still creating... [01m20s elapsed]
+module.vpc.aws_nat_gateway.main[2]: Still creating... [01m20s elapsed]
+module.vpc.aws_nat_gateway.main[1]: Still creating... [01m20s elapsed]
+module.vpc.aws_nat_gateway.main[0]: Still creating... [01m30s elapsed]
+module.vpc.aws_nat_gateway.main[2]: Still creating... [01m30s elapsed]
+module.vpc.aws_nat_gateway.main[1]: Still creating... [01m30s elapsed]
+module.vpc.aws_nat_gateway.main[2]: Creation complete after 1m39s [id=nat-05b6784206557b675]
+module.vpc.aws_nat_gateway.main[0]: Still creating... [01m40s elapsed]
+module.vpc.aws_nat_gateway.main[1]: Still creating... [01m40s elapsed]
+module.vpc.aws_nat_gateway.main[1]: Creation complete after 1m41s [id=nat-0b03bef1515a6fe63]
+module.vpc.aws_nat_gateway.main[0]: Still creating... [01m50s elapsed]
+module.vpc.aws_nat_gateway.main[0]: Creation complete after 1m59s [id=nat-0f3d2cd13b3526109]
+module.vpc.aws_route_table.private[1]: Creating...
+module.vpc.aws_route_table.private[0]: Creating...
+module.vpc.aws_route_table.private[2]: Creating...
+module.vpc.aws_route_table.private[1]: Creation complete after 4s [id=rtb-0807b26db46b23589]
+module.vpc.aws_route_table.private[0]: Creation complete after 5s [id=rtb-0a17d2ddd02ed8edc]
+module.vpc.aws_route_table.private[2]: Creation complete after 5s [id=rtb-0ad20d302b094c948]
+module.vpc.aws_route_table_association.private[2]: Creating...
+module.vpc.aws_route_table_association.private[0]: Creating...
+module.vpc.aws_route_table_association.private[1]: Creating...
+module.vpc.aws_route_table_association.private[0]: Creation complete after 1s [id=rtbassoc-09d9d1f8b6536cdb8]
+module.vpc.aws_route_table_association.private[2]: Creation complete after 1s [id=rtbassoc-072df700bda851ad9]
+module.vpc.aws_route_table_association.private[1]: Creation complete after 1s [id=rtbassoc-00711dcc81aa01671]
+Releasing state lock. This may take a few moments...
+
+Apply complete! Resources: 24 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+availability_zones = tolist([
+  "us-east-1a",
+  "us-east-1b",
+  "us-east-1c",
+  "us-east-1d",
+  "us-east-1e",
+  "us-east-1f",
+])
+internet_gateway_id = "igw-022642bb414b3f0f0"
+nat_gateway_ids = [
+  "nat-0f3d2cd13b3526109",
+  "nat-0b03bef1515a6fe63",
+  "nat-05b6784206557b675",
+]
+private_subnet_ids = [
+  "subnet-0f28a43411652ee68",
+  "subnet-02e3cf88c2a8c128c",
+  "subnet-0189ba37739426db4",
+]
+public_subnet_ids = [
+  "subnet-090d37339b6a0a64f",
+  "subnet-07b924b6235a0c5ae",
+  "subnet-00b29307664481450",
+]
+vpc_cidr_block = "10.0.0.0/16"
+vpc_id = "vpc-0c79b7af5da9b6c51"
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra\VPC-terraform-code> 
+
+
+=====================================================================================================
+
+==> Terraform EKS 
+
+
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra\EKS-main-code-useing-module> terraform init
+Initializing modules...
+Initializing provider plugins found in the configuration...
+- Finding hashicorp/aws versions matching "~> 5.0"...
+- Installing hashicorp/aws v5.100.0...
+- Installed hashicorp/aws v5.100.0 (signed by HashiCorp)
+
+Initializing the backend...
+
+Successfully configured the backend "s3"! Terraform will automatically
+use this backend unless the backend configuration changes.
+Terraform has created a lock file .terraform.lock.hcl to record the provider
+selections it made above. Include this file in your version control repository
+so that Terraform can guarantee to make the same selections by default when
+you run "terraform init" in the future.
+
+Terraform has been successfully initialized!
+
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra\EKS-main-code-useing-module> 
+
+
+
+
+
+===> Initialzed the EKS terraform code:
+==================================================
+
+
+==> PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra\EKS-main-code-using-module> terraform init
+Initializing modules...
+Initializing provider plugins found in the configuration...
+- Reusing previous version of hashicorp/aws from the dependency lock file
+- Using previously-installed hashicorp/aws v5.100.0
+
+Initializing the backend...
+
+
+
+Terraform has been successfully initialized!
+
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra\EKS-main-code-using-module>    
+
+
+
+
+===> Executed terraform plan for EKS:
+
+
+
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra\EKS-main-code-using-module> terraform plan -var-file eks-terraform.tfvars
+module.eks.data.aws_iam_policy_document.eks_node_assume_role: Reading...
+module.eks.data.aws_iam_policy_document.eks_cluster_assume_role: Reading...
+module.eks.data.aws_iam_policy_document.eks_cluster_assume_role: Read complete after 0s [id=3552664922]module.eks.data.aws_iam_policy_document.eks_node_assume_role: Read complete after 0s [id=2851119427]
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are
+indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # module.eks.aws_eks_cluster.this will be created
+  + resource "aws_eks_cluster" "this" {
+      + arn                           = (known after apply)
+      + bootstrap_self_managed_addons = true
+      + certificate_authority         = (known after apply)
+      + cluster_id                    = (known after apply)
+      + created_at                    = (known after apply)
+      + enabled_cluster_log_types     = [
+          + "api",
+          + "audit",
+          + "authenticator",
+          + "controllerManager",
+          + "scheduler",
+        ]
+      + endpoint                      = (known after apply)
+      + id                            = (known after apply)
+      + identity                      = (known after apply)
+      + name                          = "example-eks-cluster"
+      + platform_version              = (known after apply)
+      + role_arn                      = (known after apply)
+      + status                        = (known after apply)
+      + tags                          = {
+          + "Name" = "example-eks-cluster"
+        }
+      + tags_all                      = {
+          + "Name" = "example-eks-cluster"
+        }
+      + version                       = "1.29"
+
+      + access_config (known after apply)
+
+      + kubernetes_network_config (known after apply)
+
+      + upgrade_policy (known after apply)
+
+      + vpc_config {
+          + cluster_security_group_id = (known after apply)
+          + endpoint_private_access   = false
+          + endpoint_public_access    = true
+          + public_access_cidrs       = (known after apply)
+          + subnet_ids                = [
+              + "subnet-0189ba37739426db4",
+              + "subnet-02e3cf88c2a8c128c",
+              + "subnet-0f28a43411652ee68",
+            ]
+          + vpc_id                    = (known after apply)
+        }
+    }
+
+  # module.eks.aws_eks_node_group.this will be created
+  + resource "aws_eks_node_group" "this" {
+      + ami_type               = (known after apply)
+      + arn                    = (known after apply)
+      + capacity_type          = "ON_DEMAND"
+      + cluster_name           = "example-eks-cluster"
+      + disk_size              = (known after apply)
+      + id                     = (known after apply)
+      + instance_types         = [
+          + "t3.medium",
+        ]
+      + node_group_name        = "example-eks-node-group"
+      + node_group_name_prefix = (known after apply)
+      + node_role_arn          = (known after apply)
+      + release_version        = (known after apply)
+      + resources              = (known after apply)
+      + status                 = (known after apply)
+      + subnet_ids             = [
+          + "subnet-0189ba37739426db4",
+          + "subnet-02e3cf88c2a8c128c",
+          + "subnet-0f28a43411652ee68",
+        ]
+      + tags                   = {
+          + "Name" = "example-eks-node-group"
+        }
+      + tags_all               = {
+          + "Name" = "example-eks-node-group"
+        }
+      + version                = (known after apply)
+
+      + node_repair_config (known after apply)
+
+      + scaling_config {
+          + desired_size = 2
+          + max_size     = 3
+          + min_size     = 1
+        }
+
+      + update_config (known after apply)
+    }
+
+  # module.eks.aws_iam_role.eks_cluster will be created
+  + resource "aws_iam_role" "eks_cluster" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "eks.amazonaws.com"
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "example-eks-cluster-cluster-role"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags_all              = (known after apply)
+      + unique_id             = (known after apply)
+
+      + inline_policy (known after apply)
+    }
+
+  # module.eks.aws_iam_role.eks_node_group will be created
+  + resource "aws_iam_role" "eks_node_group" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "ec2.amazonaws.com"
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "example-eks-cluster-node-role"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags_all              = (known after apply)
+      + unique_id             = (known after apply)
+
+      + inline_policy (known after apply)
+    }
+
+  # module.eks.aws_iam_role_policy_attachment.ec2_container_registry_read_only will be created
+  + resource "aws_iam_role_policy_attachment" "ec2_container_registry_read_only" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+      + role       = "example-eks-cluster-node-role"
+    }
+
+  # module.eks.aws_iam_role_policy_attachment.eks_cluster_policy will be created
+  + resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+      + role       = "example-eks-cluster-cluster-role"
+    }
+
+  # module.eks.aws_iam_role_policy_attachment.eks_cni_policy will be created
+  + resource "aws_iam_role_policy_attachment" "eks_cni_policy" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+      + role       = "example-eks-cluster-node-role"
+    }
+
+  # module.eks.aws_iam_role_policy_attachment.eks_service_policy will be created
+  + resource "aws_iam_role_policy_attachment" "eks_service_policy" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
+      + role       = "example-eks-cluster-cluster-role"
+    }
+
+  # module.eks.aws_iam_role_policy_attachment.eks_worker_node_policy will be created
+  + resource "aws_iam_role_policy_attachment" "eks_worker_node_policy" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+      + role       = "example-eks-cluster-node-role"
+    }
+
+Plan: 9 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + cluster_arn                        = (known after apply)
+  + cluster_certificate_authority_data = (known after apply)
+  + cluster_endpoint                   = (known after apply)
+  + cluster_name                       = "example-eks-cluster"
+  + node_group_arn                     = (known after apply)
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly
+these actions if you run "terraform apply" now.
+Releasing state lock. This may take a few moments...
+
+
+
+
+
+===> Error while creating the nodes in cluster:
+
+Enter a value: yes
+
+module.eks.aws_eks_node_group.this: Creating...
+╷
+│ Error: creating EKS Node Group (example-eks-cluster:example-eks-node-group): operation error EKS: CreateNodegroup, https response error StatusCode: 400, RequestID: ea287325-383d-44e3-ae1b-a61ec05c7799, InvalidParameterException: Requested AMI for this version 1.29 is not supported
+│ 
+│   with module.eks.aws_eks_node_group.this,
+│   on ..\Module\EKS\main.tf line 84, in resource "aws_eks_node_group" "this":
+│   84: resource "aws_eks_node_group" "this" {
+│ 
+╵
+Releasing state lock. This may take a few moments...
+
+
+
+==>The issue is a mismatch between Kubernetes 1.29 and t3.medium instance type—the AMI isn't available for that combination. Fix the syntax error (missing quote) and change to a supported configuration:
+
+Changed cluster_version to 1.28 (more stable and compatible with t3.medium). Re-run from Module/EKS/EKS-main-code-useing-module/:
+
+==> changing the cluster version from 1.29 to 1.33 solved the issue
+
+
+
+==>Another error:
+
+module.eks.aws_eks_node_group.this: Still creating... [33m20s elapsed]
+╷
+│ Error: waiting for EKS Node Group (example-eks-cluster:example-eks-node-group) create: unexpected state 'CREATE_FAILED', wanted target 'ACTIVE'. last error: eks-example-eks-node-group-9acefbfc-ca2a-3d87-5967-58b62758f6a7: AsgInstanceLaunchFailures: Could not launch On-Demand Instances. InvalidParameterCombination - The specified instance type is not eligible for Free Tier. For a list of Free Tier instance types, run 'describe-instance-types' with the filter 'free-tier-eligible=true'. Launching EC2 instance failed.
+│ 
+│   with module.eks.aws_eks_node_group.this,
+│   on ..\Module\EKS\main.tf line 84, in resource "aws_eks_node_group" "this":
+│   84: resource "aws_eks_node_group" "this" {
+│ 
+╵
+Releasing state lock. This may take a few moments...
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra\EKS-main-code-using-module> 
+
+
+==> Modified the instance type from t3.medium to t3.micro
+
+
+
+==> Successfully deployed cluster:
+
+
+Outputs:
+
+cluster_arn = "arn:aws:eks:us-east-1:915170001868:cluster/example-eks-cluster"
+cluster_certificate_authority_data = "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURCVENDQWUyZ0F3SUJBZ0lJWCtoRE1uRytlSlF3RFFZSktvWklodmNOQVFFTEJRQXdGVEVUTUJFR0ExVUUKQXhNS2EzVmlaWEp1WlhSbGN6QWVGdzB5TmpBMU1EVXhNekUwTkRKYUZ3MHpOakExTURJeE16RTVOREphTUJVeApFekFSQmdOVkJBTVRDbXQxWW1WeWJtVjBaWE13Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLCkFvSUJBUURQRWN0VE0yQ0pKRVlLTmlGS3FkQ3JjcTJ0czRqWUc2WjVRSGxVYmxMS2N1S0JuT2lwVkVoRUdRdmoKY3Q0d201Q24rb2pabnp0OUluRnY2S2ZQVUNNVWtES21tanRZdm15TXRxODg4eWFTS0ovSFFqSk9YbXNneXlnTQo4RjJrRndobTIrY2k4dWZ6b0ZTQ3B2Rk5COVl6L0NnbE44aWE5Y3VBem5aV2djeU85UnJCaVNEcGNUVktnWlZzCjROMnVGQ1NUNUl6S3B1aG40RE1hbTkzTEhHeFpad2tocmdIK2NJZmpVczFNM0RyZ1VmeGcya2ZTZWlPYkhhWVUKSVQxekF6akd1T3F1dDBtNXFMT2crNXZVY1pPNC9URGlrVzdXSnhCcnJoV1pISUhEWnlBSS9zZWVmQ1pBVElpdAowR21NT1c0bERGNXZ0eHNZclhBY0xKU1Q4Q0U3QWdNQkFBR2pXVEJYTUE0R0ExVWREd0VCL3dRRUF3SUNwREFQCkJnTlZIUk1CQWY4RUJUQURBUUgvTUIwR0ExVWREZ1FXQkJScXhOREFLTTRPNG15amloWm1FTWRpd2h1TTl6QVYKQmdOVkhSRUVEakFNZ2dwcmRXSmxjbTVsZEdWek1BMEdDU3FHU0liM0RRRUJDd1VBQTRJQkFRQXczckZSVjdqRgpCZEF5dFZZL2RHeVBrcG1wVFNRbGhqTytqY3k4UDdDU1FMNnRvaVBuRGxTQUp1SHJTQ1huS0ZUa3ZxSkVBYmZhCnpIKzhUZmsxRWZBL3UyRjZ0em83amtuVVNnSjBjSkt6NVpFc3lNV2M4elFXdWhIVmd0MUdJblJlMllxOHBBMDMKNlJOeU5iZUd4KzF3L3ZKTnkxVm9oK3ZnUlFWb09TVTJXa3NzdUxNZmY0eCtaZTN3RE5PNEJGM0ZJK1k2SEhwRApLRzRwYTRkNGcyTkRZbkhVbzhtanRSY0pVcVdOeWFyTW4raVB2bDh4ekxObGRINzVEYk9lVUZBL3E4VVJRWWttCmlnM0dtRUlHcGlmSE4rYjZzbFNXMHBKQjJyaEp1Q3YxaXNsWjlITGZZckViU1pDVVFLa0M2TEFWN0tNRXM4Z1gKdnpZbFhTUklHS29sCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K"
+cluster_endpoint = "https://795BCE2F994A99AD13FEF09BB5AAA2FF.gr7.us-east-1.eks.amazonaws.com"
+cluster_name = "example-eks-cluster"
+node_group_arn = "arn:aws:eks:us-east-1:915170001868:nodegroup/example-eks-cluster/example-eks-node-group/8acefc27-661b-8d96-22a2-04490b4d419a"
+
+
+
+
+
+
+
+
+=====================================================================================================================
+=====================================================================================================================
+
+==> Deploying the Application Microservices on k8s cluster:
+
+1- Installed kubectl to communicate to the k8s CLI.
+
+2- Check kubeconfig. Currently kubectl does not know which cluster to use.
+
+PS C:\Users\vinay\OneDrive\Documents\k8s-manifest-file> kubectl config current-context
+error: current-context is not set
+PS C:\Users\vinay\OneDrive\Documents\k8s-manifest-file> 
+
+PS C:\Users\vinay\OneDrive\Documents\k8s-manifest-file> kubectl config view
+apiVersion: v1
+clusters: null
+contexts: null
+current-context: ""
+kind: Config
+users: null
+PS C:\Users\vinay\OneDrive\Documents\k8s-manifest-file> 
+
+
+3- kubectl depends on file kubeconfig. In kubeconfig file we can provide list of clusters we want to connect.
+
+4- Created kubeconfig file using below aws command, as using EKS AWS managed k8s service.
+
+PS C:\Users\vinay\OneDrive\Documents\k8s-manifest-file\ultimate-devops-project-demo\kubernetes> aws eks update-kubeconfig --region us-east-1 --name example-eks-cluster
+Added new context arn:aws:eks:us-east-1:915170001868:cluster/example-eks-cluster to C:\Users\vinay\.kube\config
+PS C:\Users\vinay\OneDrive\Documents\k8s-manifest-file\ultimate-devops-project-demo\kubernetes> 
+
+
+PS C:\Users\vinay\OneDrive\Documents\k8s-manifest-file\ultimate-devops-project-demo\kubernetes> kubectl config current-context
+arn:aws:eks:us-east-1:915170001868:cluster/example-eks-cluster
+PS C:\Users\vinay\OneDrive\Documents\k8s-manifest-file\ultimate-devops-project-demo\kubernetes> 
+
+
+5- Check service account. We can see default service account.
+
+PS C:\Users\vinay\OneDrive\Documents\k8s-manifest-file\ultimate-devops-project-demo\kubernetes> kubectl get sa
+NAME      SECRETS   AGE
+default   0         25m
+
+
+6- Now we will create custom service account.
+
+PS C:\Users\vinay\OneDrive\Documents\k8s-manifest-file\ultimate-devops-project-demo\kubernetes> kubectl apply -f .\serviceaccount.yaml
+serviceaccount/opentelemetry-demo created
+
+PS C:\Users\vinay\OneDrive\Documents\k8s-manifest-file\ultimate-devops-project-demo\kubernetes> kubectl get sa          
+NAME                 SECRETS   AGE
+default              0         27m
+opentelemetry-demo   0         17s
+
+7- So we have many microservices. We can create a different manifest file for all service and run kubectl apply command for each service like if we have 20 services we need to run
+command 20 times. Else we can create a single manifest file for all service.
+
+
+PS C:\Users\vinay\OneDrive\Documents\k8s-manifest-file\ultimate-devops-project-demo\kubernetes> kubectl apply -f .\complete-deploy.yaml
+serviceaccount/opentelemetry-demo unchanged
+service/opentelemetry-demo-adservice created
+service/opentelemetry-demo-cartservice created
+service/opentelemetry-demo-checkoutservice created
+service/opentelemetry-demo-currencyservice created
+service/opentelemetry-demo-emailservice created
+service/opentelemetry-demo-flagd created
+service/opentelemetry-demo-frontend created
+service/opentelemetry-demo-frontendproxy created
+service/opentelemetry-demo-imageprovider created
+service/opentelemetry-demo-kafka created
+service/opentelemetry-demo-loadgenerator created
+service/opentelemetry-demo-paymentservice created
+service/opentelemetry-demo-productcatalogservice created
+service/opentelemetry-demo-quoteservice created
+service/opentelemetry-demo-recommendationservice created
+service/opentelemetry-demo-shippingservice created
+service/opentelemetry-demo-valkey created
+deployment.apps/opentelemetry-demo-accountingservice created
+deployment.apps/opentelemetry-demo-adservice created
+deployment.apps/opentelemetry-demo-cartservice created
+deployment.apps/opentelemetry-demo-checkoutservice created
+deployment.apps/opentelemetry-demo-currencyservice created
+deployment.apps/opentelemetry-demo-emailservice created
+Warning: spec.template.spec.containers[1].ports[0]: duplicate port name "service" with spec.template.spec.containers[0].ports[0], services and probes that select ports by name will use spec.template.spec.containers[0].ports[0]
+deployment.apps/opentelemetry-demo-flagd created
+deployment.apps/opentelemetry-demo-frauddetectionservice created
+deployment.apps/opentelemetry-demo-frontend created
+deployment.apps/opentelemetry-demo-frontendproxy created
+deployment.apps/opentelemetry-demo-imageprovider created
+deployment.apps/opentelemetry-demo-kafka created
+deployment.apps/opentelemetry-demo-loadgenerator created
+deployment.apps/opentelemetry-demo-paymentservice created
+deployment.apps/opentelemetry-demo-productcatalogservice created
+deployment.apps/opentelemetry-demo-quoteservice created
+deployment.apps/opentelemetry-demo-recommendationservice created
+deployment.apps/opentelemetry-demo-shippingservice created
+deployment.apps/opentelemetry-demo-valkey created
+configmap/opentelemetry-demo-flagd-config created
+PS C:\Users\vinay\OneDrive\Documents\k8s-manifest-file\ultimate-
+
+
+
+8- pods creation failed due to insufficien memory issue
+
+
+Events:
+  Type     Reason            Age    From               Message
+  ----     ------            ----   ----               -------
+  Warning  FailedScheduling  4m39s  default-scheduler  0/1 nodes are available: 1 Insufficient memory, 1 Too many pods. preemption: 0/1 nodes are available: 1 No preemption victims found for incoming pod.
+
+
+
+9- Have created just 1 node and may be it is hitting max pod limit. Can see max no. of pods in node can be 4
+
+Allocatable:
+  cpu:                1930m
+  ephemeral-storage:  18181869946
+  hugepages-1Gi:      0
+  hugepages-2Mi:      0
+  memory:             524976Ki
+  pods:               4           <<==========4 pods
+
+
+10- In EKS, max pods depends on:
+
+EC2 instance type
+ENI/IP limits
+
+For t3.micro, AWS allows only:
+
+4 pods total
+
+
+11- So increased the number of nodes and pods started running. Or else we can modify the instance type from t3.micro to t3.medium
+
+
+1500-500==opentelemetry-demo-loadgenerator
+600-200=opentelemetry-demo-kafka
+
+12- Modified the memory limit for some pods and recreated only those pods
+
+kubectl rollout restart deployment <deployment-name>
+
+
+
+PS C:\Users\vinay\OneDrive\Documents\k8s-manifest-file\ultimate-devops-project-demo\kubernetes> kubectl rollout restart 
+deployment opentelemetry-demo-kafka                  
+deployment.apps/opentelemetry-demo-kafka restarted
+PS C:\Users\vinay\OneDrive\Documents\k8s-manifest-file\ultimate-devops-project-demo\kubernetes> 
+
+
+
+
+Why It Still Didn't Scale Even If ASG Exists
+
+Even if your nodegroup has:
+
+min=1 max=4 desired=1
+
+AWS Auto Scaling Group alone does NOT understand Kubernetes pending pods.
+
+You must install:
+
+Cluster Autoscaler
+OR
+Karpenter
+
+
+
+
+13- I increated the no. of instances in ASg to 16 but instances were not getting created. Checked in ASG activity and found instance creation failed
+Launching a new EC2 instance. Status Reason: Could not launch On-Demand Instances. VcpuLimitExceeded - 
+You have requested more vCPU capacity than your current vCPU limit of 16 allows for the instance bucket that the specified instance type belongs to. Please visit http://aws.amazon.com/contact-us/ec2-request to request an adjustment to this limit. Launching EC2 instance failed.
+to connect Kubernetes scheduling with EC2 scaling.
+===========================================================================================================
+
+
+==> Deploying simple app microservices
+
+1- It has frontend as nginx and backend.
+
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra\EKS-main-code-using-module\sample-app> kubectl apply -f .\app.yaml
+service/backend created
+deployment.apps/backend created
+configmap/frontend-content created
+deployment.apps/frontend created
+service/frontend created
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra\EKS-main-code-using-module\sample-app> 
+
+
+2-created the pods:
+
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra\EKS-main-code-using-module\sample-app> kubectl get svc
+NAME         TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+backend      ClusterIP   172.20.89.120    <none>        8080/TCP   6m20s
+frontend     ClusterIP   172.20.207.173   <none>        80/TCP     6m18s
+kubernetes   ClusterIP   172.20.0.1       <none>        443/TCP    25m
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra\EKS-main-code-using-module\sample-app> 
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra\EKS-main-code-using-module\sample-app> 
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra\EKS-main-code-using-module\sample-app> kubectl get pods         
+NAME                        READY   STATUS    RESTARTS   AGE
+backend-85f569b944-pt9h5    1/1     Running   0          6m25s
+frontend-75f668df4f-psshg   1/1     Running   0          6m24s
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra\EKS-main-code-using-module\sample-app> 
+
+
+3 used the service type as LB:
+
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra\EKS-main-code-using-module\sample-app> kubectl get svc
+NAME         TYPE           CLUSTER-IP       EXTERNAL-IP                                                              PORT(S)        AGE
+backend      ClusterIP      172.20.89.120    <none>                                                                   8080/TCP       18m
+frontend     LoadBalancer   172.20.207.173   a4df135c4290543b0af3f1f1ca40809b-882939215.us-east-1.elb.amazonaws.com   80:30200/TCP   18m
+kubernetes   ClusterIP      172.20.0.1       <none>                                                                   443/TCP        37m
+PS C:\Users\vinay\OneDrive\Documents\terraform-aws-infra\EKS-main-code-using-module\sample-app> 
+
+
+4- Frontend webpage was loading but backed was not loading. It was giving error "Error: TypeError: Failed to fetch"
+
+5- Because your browser is outside the cluster, it cannot resolve or connect to the internal service name backend.
+
+Your frontend runs in the browser, not inside Kubernetes.
+
+So this line in your frontend:
+
+fetch('http://backend:8080')
+
+is executed on your laptop/browser, not in the cluster                                                                
+
+
+
+
+6- What changed:
+Added frontend-nginx-config ConfigMap with nginx.conf
+Frontend now proxies browser requests from /api to http://backend:8080
+Frontend still serves the static HTML page from frontend-content
+
+
+
+7- Flow:
+
+Browser calls the frontend LoadBalancer URL.
+LB forwards to the frontend Service.
+frontend Service routes to a frontend pod.
+Frontend nginx receives the browser request.
+For /api, nginx proxies internally to http://backend:8080.
+The backend Service routes that to a backend pod.
+Backend pod responds, and nginx returns the response to the browser.
+So the browser only talks to the frontend LB. The backend is reached from inside the cluster via nginx proxy in the frontend pod.
