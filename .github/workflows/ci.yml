@@ -26,10 +26,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install kubectl
-        run: |
-         curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-         chmod +x kubectl
-         sudo mv kubectl /usr/local/bin/
+        - name: Install kubectl
+          uses: azure/setup-kubectl@v4
+          with:
+            version: 'latest'
 
       - name: Install kubeval
         run: |
@@ -38,13 +38,14 @@ jobs:
 
       - name: Install kube-linter
         run: |
-          curl -sL https://github.com/stackrox/kube-linter/releases/latest/download/kube-linter-linux-amd64.tar.gz | tar xz
-          sudo install kube-linter /usr/local/bin/
+          go install github.com/stackrox/kube-linter/cmd/kube-linter@latest
+          mv "$HOME/go/bin/kube-linter" /usr/local/bin/
+          
 
       - name: Install kube-score
         run: |
-          curl -sL https://github.com/zegl/kube-score/releases/latest/download/kube-score_linux_amd64.tar.gz | tar xz
-          sudo install kube-score /usr/local/bin/
+          go install github.com/zegl/kube-score/cmd/kube-score@latest
+          mv "$HOME/go/bin/kube-score" /usr/local/bin/
 
       - name: Install Trivy
         run: |
