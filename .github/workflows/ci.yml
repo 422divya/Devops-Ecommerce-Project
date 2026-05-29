@@ -2,14 +2,14 @@ name: CI
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
     paths:
       - 'app.yaml'
       - '*.yaml'
       - '*.yml'
       - 'manifests/**'
   push:
-    branches: [ main ]
+    branches: [ master ]
     paths:
       - 'app.yaml'
       - '*.yaml'
