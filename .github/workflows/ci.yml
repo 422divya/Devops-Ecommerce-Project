@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'app.yaml'
+      - '*.yaml'
+      - '*.yml'
+      - 'manifests/**'
+  push:
+    branches: [ main ]
+    paths:
+      - 'app.yaml'
+      - '*.yaml'
+      - '*.yml'
+      - 'manifests/**'
+
+jobs:
+  validate-manifests:
+    name: Validate Kubernetes manifests and scan for issues
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+      - name: Install kubeval
+        run: |
+          curl -sL https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz | tar xz
+          sudo install kubeval /usr/local/bin/
+
+      - name: Install kube-linter
+        run: |
+          curl -sL https://github.com/stackrox/kube-linter/releases/latest/download/kube-linter-linux-amd64.tar.gz | tar xz
+          sudo install kube-linter /usr/local/bin/
+
+      - name: Install kube-score
+        run: |
+          curl -sL https://github.com/zegl/kube-score/releases/latest/download/kube-score_linux_amd64.tar.gz | tar xz
+          sudo install kube-score /usr/local/bin/
+
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin v0.47.0
+
+      - name: Validate manifests with kubectl
+        run: |
+          kubectl apply --dry-run=client --validate=true -f app.yaml
+
+      - name: Validate manifests with kubeval
+        run: |
+          kubeval app.yaml --strict --kubernetes-version="1.27.0"
+
+      - name: Lint manifests with kube-linter
+        run: |
+          kube-linter lint app.yaml
+
+      - name: Score manifests with kube-score
+        run: |
+          kube-score score app.yaml
+
+      - name: Reject latest image tags
+        run: |
+          set -e
+          latest_images=$(grep -RhoP 'image:\s*\K\S+' app.yaml | grep ':latest$' || true)
+          if [ -n "$latest_images" ]; then
+            echo 'Found disallowed latest tag(s):'
+            echo "$latest_images"
+            exit 1
+          fi
+          echo 'No latest image tags found.'
+
+      - name: Ensure all images are explicitly tagged
+        run: |
+          set -e
+          images=$(grep -RhoP 'image:\s*\K\S+' app.yaml || true)
+          missing_tags=$(echo "$images" | grep -vE ':[^/]+$' || true)
+          if [ -n "$missing_tags" ]; then
+            echo 'Found image(s) without explicit tags:'
+            echo "$missing_tags"
+            exit 1
+          fi
+          echo 'All images are explicitly tagged.'
+
+      - name: Scan Kubernetes YAML for misconfiguration with Trivy
+        run: |
+          trivy config --severity HIGH,CRITICAL .
+
+      - name: Scan referenced images for vulnerabilities with Trivy
+        run: |
+          set -e
+          images=$(grep -RhoP 'image:\s*\K\S+' app.yaml | sort -u || true)
+          if [ -z "$images" ]; then
+            echo 'No image references found in app.yaml'
+            exit 0
+          fi
+          echo "Found images:"
+          echo "$images"
+          for image in $images; do
+            trivy image --severity HIGH,CRITICAL --exit-code 1 "$image"
+          done

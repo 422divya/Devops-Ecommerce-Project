@@ -1,0 +1,9 @@
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+helm.zip
+eksctl.zip
+helm/
+devops-project.txt
