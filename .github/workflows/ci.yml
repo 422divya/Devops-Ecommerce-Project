@@ -8,13 +8,7 @@ on:
       - '*.yaml'
       - '*.yml'
       - 'manifests/**'
-  push:
-    branches: [ master ]
-    paths:
-      - 'app.yaml'
-      - '*.yaml'
-      - '*.yml'
-      - 'manifests/**'
+  
 
 jobs:
   validate-manifests:
