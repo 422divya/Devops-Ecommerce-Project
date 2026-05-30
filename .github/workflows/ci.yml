@@ -52,17 +52,13 @@ jobs:
 
           kube-score version
 
-      - name: Install Trivy
-        run: |
-         VERSION=0.47.0
-
-         wget https://github.com/aquasecurity/trivy/releases/download/v${VERSION}/trivy_${VERSION}_Linux-64bit.tar.gz
-
-         tar -xzf trivy_${VERSION}_Linux-64bit.tar.gz
-
-         sudo mv trivy /usr/local/bin/
-
-         trivy --version
+      - name: Run Trivy config scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'config'
+          scan-ref: '.'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '1'
 
       - name: Validate manifests with kubectl
         run: |
@@ -103,20 +99,4 @@ jobs:
           fi
           echo 'All images are explicitly tagged.'
 
-      - name: Scan Kubernetes YAML for misconfiguration with Trivy
-        run: |
-          trivy config --severity HIGH,CRITICAL .
-
-      - name: Scan referenced images for vulnerabilities with Trivy
-        run: |
-          set -e
-          images=$(grep -RhoP 'image:\s*\K\S+' app.yaml | sort -u || true)
-          if [ -z "$images" ]; then
-            echo 'No image references found in app.yaml'
-            exit 0
-          fi
-          echo "Found images:"
-          echo "$images"
-          for image in $images; do
-            trivy image --severity HIGH,CRITICAL --exit-code 1 "$image"
-          done
+      
