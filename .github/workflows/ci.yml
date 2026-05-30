@@ -60,9 +60,9 @@ jobs:
           severity: 'HIGH,CRITICAL'
           exit-code: '0'
 
-      - name: Validate manifests with kubectl
+      - name: Validate manifests with kubectl offline
         run: |
-          kubectl apply --dry-run=client --validate=false -f app.yaml
+          KUBECONFIG=/dev/null kubectl apply --dry-run=client --validate=false -f app.yaml
 
       - name: Validate manifests with kubeval
         run: |
