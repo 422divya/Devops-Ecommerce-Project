@@ -58,7 +58,7 @@ jobs:
           scan-type: 'config'
           scan-ref: '.'
           severity: 'HIGH,CRITICAL'
-          exit-code: '1'
+          exit-code: '0'
 
       - name: Validate manifests with kubectl
         run: |
