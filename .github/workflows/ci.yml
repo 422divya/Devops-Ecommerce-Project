@@ -62,7 +62,7 @@ jobs:
 
       - name: Validate manifests with kubectl offline
         run: |
-          KUBECONFIG=/dev/null kubectl apply --local=true --dry-run=client --validate=false -f app.yaml
+          kubectl --kubeconfig=/dev/null apply --dry-run=client --validate=false -f app.yaml
 
       - name: Validate manifests with kubeval
         run: |
