@@ -62,7 +62,7 @@ jobs:
 
       - name: Validate manifests with kubectl
         run: |
-          kubectl apply --dry-run=client --validate=true -f app.yaml
+          kubectl apply --dry-run=client -f app.yaml
 
       - name: Validate manifests with kubeval
         run: |
