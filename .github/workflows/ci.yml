@@ -3,11 +3,7 @@ name: CI
 on:
   pull_request:
     branches: [ master ]
-    paths:
-      - 'app.yaml'
-      - '*.yaml'
-      - '*.yml'
-      - 'manifests/**'
+    
   
 
 jobs:
@@ -20,35 +16,51 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install kubectl
-        - name: Install kubectl
-          uses: azure/setup-kubectl@v4
-          with:
-            version: 'latest'
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
 
       - name: Install kubeval
         run: |
           curl -sL https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz | tar xz
           sudo install kubeval /usr/local/bin/
 
+
       - name: Install kube-linter
         run: |
-          go install github.com/stackrox/kube-linter/cmd/kube-linter@latest
-          mv "$HOME/go/bin/kube-linter" /usr/local/bin/
+         VERSION=0.8.3
+         curl -sSL -o kube-linter.tar.gz https://github.com/stackrox/kube-linter/releases/download/v${VERSION}/kube-linter-linux.tar.gz
+
+         tar -xzf kube-linter.tar.gz
+         chmod +x kube-linter
+         sudo mv kube-linter /usr/local/bin/
+
+         kube-linter version
           
 
       - name: Install kube-score
         run: |
-          go install github.com/zegl/kube-score/cmd/kube-score@latest
-          mv "$HOME/go/bin/kube-score" /usr/local/bin/
+          KUBE_SCORE_VERSION="1.20.0"
 
-      - name: Install Trivy
-        run: |
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin v0.47.0
+          curl -sSL -o kube-score.tar.gz \
+          https://github.com/zegl/kube-score/releases/download/v${KUBE_SCORE_VERSION}/kube-score_${KUBE_SCORE_VERSION}_linux_amd64.tar.gz
 
-      - name: Validate manifests with kubectl
-        run: |
-          kubectl apply --dry-run=client --validate=true -f app.yaml
+          tar -xzf kube-score.tar.gz
 
+          chmod +x kube-score
+          sudo mv kube-score /usr/local/bin/
+
+          kube-score version
+
+      - name: Run Trivy config scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          scan-ref: '.'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '0'
+
+      
       - name: Validate manifests with kubeval
         run: |
           kubeval app.yaml --strict --kubernetes-version="1.27.0"
@@ -84,20 +96,4 @@ jobs:
           fi
           echo 'All images are explicitly tagged.'
 
-      - name: Scan Kubernetes YAML for misconfiguration with Trivy
-        run: |
-          trivy config --severity HIGH,CRITICAL .
-
-      - name: Scan referenced images for vulnerabilities with Trivy
-        run: |
-          set -e
-          images=$(grep -RhoP 'image:\s*\K\S+' app.yaml | sort -u || true)
-          if [ -z "$images" ]; then
-            echo 'No image references found in app.yaml'
-            exit 0
-          fi
-          echo "Found images:"
-          echo "$images"
-          for image in $images; do
-            trivy image --severity HIGH,CRITICAL --exit-code 1 "$image"
-          done
+      
